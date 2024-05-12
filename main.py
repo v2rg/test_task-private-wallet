@@ -10,7 +10,7 @@ import json
 
 
 class PrivateWallet:
-    def create_wallet(self, new_wallet):
+    def create_wallet(self, new_wallet) -> None:  # создаем файл
         with open('wallet.json', 'w', encoding='utf-8') as f:
             wallet = json.dumps(
                 {
@@ -22,7 +22,7 @@ class PrivateWallet:
             )
             f.write(wallet)
 
-    def read_from_file(self):  # получаем данные из файла
+    def read_from_file(self) -> (bool, dict):  # получаем данные из файла
         try:
             with open('wallet.json', encoding='utf-8') as f:
                 wallet = json.load(f)
@@ -40,27 +40,56 @@ class PrivateWallet:
             else:
                 print('\n- Ошибка в файле')
 
-    def rewrite_file(self, updated_wallet):  # перезаписываем файл
+    def rewrite_file(self, updated_wallet) -> None:  # перезаписываем файл
         with open('wallet.json', 'w', encoding='utf-8') as f:
             json.dump(updated_wallet, f, indent=4, default=str, ensure_ascii=False)
 
-    def show_finance(self, operation='balance'):  # получаем баланс, сумму доход, сумму расход
-        wallet = self.read_from_file()
-
-        if wallet:
+    def show_finance(self):  # вывод финансовой информации
+        def finance_method(operation) -> float:  # получаем баланс, доход, расход
             if operation == 'доход':
                 return sum(x['total_sum'] for x in wallet['entries'] if x['operation'] == 'доход')
             elif operation == 'расход':
                 return sum(x['total_sum'] for x in wallet['entries'] if x['operation'] == 'расход') * -1
             elif operation == 'balance':
                 return wallet['balance']
+
+        wallet = self.read_from_file()
+
+        if wallet:
+            while True:
+                print(
+                    "\n===== Финансы ====="
+                    "\n1) Баланс"
+                    "\n2) Доход"
+                    "\n3) Расход"
+                    "\n0) Вернуться в главное меню"
+                )
+
+                user_action_finance = input('\nВведите номер операции: ')
+
+                try:
+                    user_action_finance = int(user_action_finance)
+                except ValueError:
+                    continue
+                else:
+                    if user_action_finance == 1:
+                        input(f"\n- Баланс: {finance_method('balance')}")
+                        continue
+                    elif user_action_finance == 2:
+                        input(f"\n- Доход: {finance_method('доход')}")
+                        continue
+                    elif user_action_finance == 3:
+                        input(f"\n- Расход: {finance_method('расход')}")
+                        continue
+                    elif user_action_finance == 0:
+                        break
         else:
-            return 'Файл не найден'
+            input('\nОшибка в файле...')
 
     def add_entry(self):  # добавляем запись в кошелек
         wallet = self.read_from_file()
 
-        def user_input_date():
+        def user_input_date() -> (str, None):  # ввод даты операции
             while True:
                 date = input("\nВведите дату (в формате '2024-05-11' или 'текущая' или q): ")
 
@@ -91,8 +120,8 @@ class PrivateWallet:
                         elif confirm_date == 'n':
                             continue
 
-        def user_input_operation():
-            while True:  # ввод типа операции
+        def user_input_operation():  # ввод типа операции
+            while True:
                 operation = input('\nВведите операцию (доход/расход или q): ').lower()
 
                 if operation == 'q':
@@ -104,8 +133,8 @@ class PrivateWallet:
 
             return operation
 
-        def user_input_total_sum():
-            while True:  # ввод суммы
+        def user_input_total_sum():  # ввод суммы
+            while True:
                 total_sum = input('\nВведите сумму (1500/758.54 или q): ')
 
                 if total_sum == 'q':
@@ -124,8 +153,8 @@ class PrivateWallet:
 
             return total_sum
 
-        def user_input_description():
-            while True:  # ввод описания
+        def user_input_description():  # ввод описания
+            while True:
                 description = input('\nВведите описание (q - отмена): ')
 
                 if description == 'q':
@@ -165,14 +194,13 @@ class PrivateWallet:
                             'description': description
                         }
 
-                        # проверка новой записи
                         print(
                             f"\n\n--- Проверка новой записи\n"
                             f"\nДата: {datetime.datetime.strftime(result['date'], '%Y-%m-%d %H:%M:%S')}"
                             f"\nОперация: {result['operation']}"
                             f"\nСумма: {result['total_sum']}"
                             f"\nОписание: {result['description']}"
-                        )
+                        )  # проверка новой записи
 
                         confirmation = str(input('\nПодтвердите ввод (y/n): ')).lower()  # подтверждение
 
@@ -180,16 +208,17 @@ class PrivateWallet:
                             if wallet:
                                 wallet['entries'].append(result)
                                 wallet['balance'] = (
-                                    wallet['balance'] + total_sum if operation == 'доход' else wallet[
-                                                                                                   'balance'] - total_sum
+                                    wallet['balance'] + total_sum
+                                    if operation == 'доход'
+                                    else wallet['balance'] - total_sum
                                 )
 
                                 self.rewrite_file(wallet)  # сохраняем измененные данные в файл (если он существует)
-                                input(f'\n--- Запись добавлена')
+                                input('\n--- Запись добавлена')
                             else:
                                 self.create_wallet(
                                     result)  # создаем новый файл и сохраняем в него запись (если файла нет)
-                                input(f'\n--- Файл создан, запись добавлена')
+                                input('\n--- Файл создан, запись добавлена')
                         else:
                             return
                     else:
@@ -201,7 +230,7 @@ class PrivateWallet:
         else:
             input('\nОтмена...')
 
-    def edit_entry(self):
+    def edit_entry(self):  # редактирование записи
         wallet = self.read_from_file()
 
         if wallet:
@@ -222,7 +251,7 @@ class PrivateWallet:
                 else:
                     input('\n\nЗаписей нет...')
 
-            def edit_entry_3():
+            def edit_entry_3():  # редактирует запись
                 def current_entry_str(entry_id) -> str:  # возвращает текущую запись в виде str
                     current_entry = [x for x in wallet['entries'] if x['id'] == entry_id]
                     if current_entry:
@@ -405,11 +434,11 @@ class PrivateWallet:
             if len(wallet['entries']) > 0:
                 while True:  # основной цикл
                     print(
-                        f'\n\n===== Изменение записи ======'
-                        f'\n1) Количество записей',
-                        f'\n2) Список всех записей'
-                        f'\n3) Выбрать запись для редактирования'
-                        f'\n0) Вернуться в главное меню'
+                        '\n\n===== Изменение записи ======'
+                        '\n1) Количество записей',
+                        '\n2) Список всех записей'
+                        '\n3) Выбрать запись для редактирования'
+                        '\n0) Вернуться в главное меню'
                     )
 
                     user_action_edit_entry = input('\nВведите номер операции: ')
@@ -430,7 +459,7 @@ class PrivateWallet:
                             # input('\n...')
 
                         elif user_action_edit_entry == 3:  # изменение записи (по id)
-                            print(f'\n\n=== Изменение записи ===')
+                            print('\n\n=== Изменение записи ===')
                             edit_entry_3()
 
                         elif user_action_edit_entry == 0:
@@ -441,14 +470,14 @@ class PrivateWallet:
         else:
             input('\nЗаписи не найдены...')
 
-    def search(self):
+    def search(self):  # поиск записи
         wallet = self.read_from_file()
 
-        def get_search_result(method):
+        def show_search_result(method) -> None:
             result = None
             user_search_query = None
 
-            if method == 'date':
+            if method == 'date':  # поиск по дате операции
                 while True:
                     user_search_query = input('\nВведите дату (в формате 2020-05-01 или q): ')
 
@@ -458,7 +487,7 @@ class PrivateWallet:
                         result = [x for x in wallet['entries'] if x['date'].startswith(user_search_query)]
                         break
 
-            elif method == 'operation':
+            elif method == 'operation':  # поиск по типу операции
                 while True:
                     user_search_query = input('\nВведите тип операции (доход/расход или q): ')
 
@@ -471,7 +500,7 @@ class PrivateWallet:
                         else:
                             continue
 
-            elif method == 'total_sum':
+            elif method == 'total_sum':  # поиск по сумме операции
                 while True:
                     user_search_query = input('\nВведите сумму (1300/430.5 или q): ')
 
@@ -520,11 +549,11 @@ class PrivateWallet:
             if len(wallet['entries']) > 0:
                 while True:
                     print(
-                        f"\n\n=== Поиск ==="
-                        f"\n1) По дате"
-                        f"\n2) По операции"
-                        f"\n3) По сумме"
-                        f"\n0) Вернуться в главное меню"
+                        "\n\n=== Поиск ==="
+                        "\n1) По дате"
+                        "\n2) По операции"
+                        "\n3) По сумме"
+                        "\n0) Вернуться в главное меню"
                     )
 
                     user_action_search = input('\nВведите номер операции: ')
@@ -536,13 +565,13 @@ class PrivateWallet:
                     else:
                         if user_action_search == 1:
                             print('\n\n--- Поиск по дате')
-                            get_search_result('date')
+                            show_search_result('date')
                         elif user_action_search == 2:
                             print('\n\n--- Поиск по операции')
-                            get_search_result('operation')
+                            show_search_result('operation')
                         elif user_action_search == 3:
                             print('\n\n--- Поиск по сумме')
-                            get_search_result('total_sum')
+                            show_search_result('total_sum')
                         elif user_action_search == 0:
                             break
 
@@ -551,14 +580,14 @@ class PrivateWallet:
         else:
             input('\nОшибка в файле...')
 
-    def main_func(self):
+    def main_method(self) -> None:  # основной метод
         main_actions = (
-            f"\n===== Главная ====="
-            f"\n1) Финансы"
-            f"\n2) Добавить запись"
-            f"\n3) Изменить запись"
-            f"\n4) Поиск"
-            f"\n0) Выход"
+            "\n===== Главная ====="
+            "\n1) Финансы"
+            "\n2) Добавить запись"
+            "\n3) Изменить запись"
+            "\n4) Поиск"
+            "\n0) Выход"
         )
         while True:
             print(main_actions)
@@ -567,45 +596,11 @@ class PrivateWallet:
 
             try:
                 user_action = int(user_action)
-            except ValueError as e:
+            except ValueError:
                 continue
             else:
                 if user_action == 1:  # финансы
-                    wallet = self.read_from_file()
-
-                    if wallet:
-                        while True:  # TODO: перенести в метод
-                            print(f"\n===== Финансы ====="
-                                  f"\n1) Баланс"
-                                  f"\n2) Доход"
-                                  f"\n3) Расход"
-                                  f"\n0) Вернуться в главное меню")
-
-                            user_action_finance = input('\nВведите номер операции: ')
-
-                            try:
-                                user_action_finance = int(user_action_finance)
-                            except ValueError:
-                                continue
-                            else:
-                                if user_action_finance == 1:
-                                    print(f"\n--- Баланс: {self.show_finance('balance')}")
-                                    input('\n...')
-                                    continue
-                                elif user_action_finance == 2:
-                                    print(f"\n--- Доход: {self.show_finance('доход')}")
-                                    input('\n...')
-                                    continue
-                                elif user_action_finance == 3:
-                                    print(f"\n--- Расход: {self.show_finance('расход')}")
-                                    input('\n...')
-                                    continue
-                                elif user_action_finance == 0:
-                                    break
-                    else:
-                        input('\nОшибка в файле...')
-                        continue
-
+                    self.show_finance()
                 elif user_action == 2:  # добавить запись
                     self.add_entry()
                 elif user_action == 3:  # изменить запись
@@ -617,4 +612,4 @@ class PrivateWallet:
 
 
 wallet = PrivateWallet()
-wallet.main_func()
+wallet.main_method()
