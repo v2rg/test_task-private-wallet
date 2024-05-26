@@ -78,7 +78,7 @@ class WalletTestCase(TestCase):
         self.create_test_file()
 
         rewrite_entry = {
-            "balance": 150,
+            "balance": 500,
             "entries": [
                 {
                     "id": 1,
@@ -149,7 +149,7 @@ class WalletTestCase(TestCase):
 
         self.create_test_file()
 
-        result = {
+        result_edited_date = {
             'balance': 500,
             'entries': [
                 {
@@ -162,7 +162,7 @@ class WalletTestCase(TestCase):
             ]
         }
 
-        if os.path.exists('test_wallet.json'):
+        if os.path.exists('test_wallet.json'):  # редактируем дату
             with mock.patch(
                     'builtins.input',
                     side_effect=[
@@ -172,4 +172,129 @@ class WalletTestCase(TestCase):
                     ]):  # редактируем запись
 
                 self.assertEqual(self.wallet.edit_entries(), None)
-                self.assertEqual(self.wallet.read_from_file(), result)
+                self.assertEqual(self.wallet.read_from_file(), result_edited_date)
+
+        result_edited_operation = {
+            'balance': -500,
+            'entries': [
+                {
+                    "id": 1,
+                    "date": "2000-01-01 00:00:00.000001",
+                    "operation": "расход",
+                    "total_sum": 500,
+                    "description": "test_description"
+                }
+            ]
+        }
+
+        if os.path.exists('test_wallet.json'):  # редактируем операцию
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '3', '1',
+                        'y', '3', 'расход',
+                        'y', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.edit_entries(), None)
+                self.assertEqual(self.wallet.read_from_file(), result_edited_operation)
+
+        result_edited_sum = {
+            'balance': -100.0,
+            'entries': [
+                {
+                    "id": 1,
+                    "date": "2000-01-01 00:00:00.000001",
+                    "operation": "расход",
+                    "total_sum": 100,
+                    "description": "test_description"
+                }
+            ]
+        }
+
+        if os.path.exists('test_wallet.json'):  # редактируем сумму
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '3', '1',
+                        'y', '4', '100',
+                        'y', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.edit_entries(), None)
+                self.assertEqual(self.wallet.read_from_file(), result_edited_sum)
+
+        result_edited_sum = {
+            'balance': -100.0,
+            'entries': [
+                {
+                    "id": 1,
+                    "date": "2000-01-01 00:00:00.000001",
+                    "operation": "расход",
+                    "total_sum": 100,
+                    "description": "test_description_edited"
+                }
+            ]
+        }
+
+        if os.path.exists('test_wallet.json'):  # редактируем сумму
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '3', '1',
+                        'y', '5', 'test_description_edited',
+                        'y', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.edit_entries(), None)
+                self.assertEqual(self.wallet.read_from_file(), result_edited_sum)
+
+    def test_search(self):
+
+        self.create_test_file()
+
+        search_result = {
+            'balance': 500,
+            'entries': [
+                {
+                    'id': 1,
+                    'date': '2024-05-20 00:00:00.00001',
+                    'operation': 'доход',
+                    'total_sum': 500,
+                    'description': 'test_description'
+                }
+            ]
+        }
+
+        if os.path.exists('test_wallet.json'):  # поиск по дате
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '1', '1', '2024',
+                        '', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.search(), None)
+                self.assertEqual(self.wallet.read_from_file(), search_result)
+
+        if os.path.exists('test_wallet.json'):  # поиск по операции
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '1', '2', 'доход',
+                        '', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.search(), None)
+                self.assertEqual(self.wallet.read_from_file(), search_result)
+
+        if os.path.exists('test_wallet.json'):  # поиск по сумме
+            with mock.patch(
+                    'builtins.input',
+                    side_effect=[
+                        '1', '3', '500',
+                        '', '', '0', '0'
+                    ]):  # редактируем запись
+
+                self.assertEqual(self.wallet.search(), None)
+                self.assertEqual(self.wallet.read_from_file(), search_result)

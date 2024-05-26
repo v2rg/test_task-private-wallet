@@ -42,6 +42,9 @@ class PrivateWallet:
                 except KeyError:
                     return False
                 else:
+                    self.wallet['balance'] = sum(
+                        x['total_sum'] if x['operation'] == 'доход' else x['total_sum'] * -1 for x in
+                        self.wallet['entries'])
                     return self.wallet
             else:
                 print('\n- Ошибка в файле')
@@ -254,7 +257,7 @@ class PrivateWallet:
     def edit_entries(self):  # редактирование записи
 
         def list_entries() -> None:  # выводит список записей (desc)
-            if count_entries():
+            if self.count_entries():
                 count = 2  # количество выводимых записей
                 for i in self.wallet['entries'][::-1]:
                     count -= 1
@@ -342,6 +345,7 @@ class PrivateWallet:
                         else:
                             user_action_new_sum = input(
                                 f"\nПодтвердите изменение суммы '{user_new_sum}' (y/n): ")
+
                             if user_action_new_sum == 'n':
                                 break
                             elif user_action_new_sum == 'y':
@@ -491,7 +495,7 @@ class PrivateWallet:
 
     def search(self):  # поиск записи
 
-        def show_search_result(method) -> None:
+        def show_search_result(method) -> (list, None):
             result = None
             user_search_query = None
 
@@ -541,29 +545,13 @@ class PrivateWallet:
                 ...
             else:
                 if result:
-                    length = len(result)
-                    input(f"\nНайдено: {length} ...")
-
-                    for i in range(length):
-                        current_entry = result[i]
-
-                        print(f"{current_entry['id']} | "
-                              f"{current_entry['date']} | "
-                              f"{current_entry['operation']} | "
-                              f"{current_entry['total_sum']} | "
-                              f"{current_entry['description']}")
-
-                        try:
-                            result[i + 1]
-                        except IndexError:
-                            input('\nБольше нет...')
-                        else:
-                            input('...')
-
+                    return result
                 else:
                     input('\nНичего не найдено...')
 
         self.wallet = self.read_from_file()
+
+        search_result = None
 
         if self.wallet:
             if len(self.wallet['entries']) > 0:
@@ -585,15 +573,38 @@ class PrivateWallet:
                     else:
                         if user_action_search == 1:
                             print('\n\n--- Поиск по дате')
-                            show_search_result('date')
+                            search_result = show_search_result('date')
                         elif user_action_search == 2:
                             print('\n\n--- Поиск по операции')
-                            show_search_result('operation')
+                            search_result = show_search_result('operation')
                         elif user_action_search == 3:
                             print('\n\n--- Поиск по сумме')
-                            show_search_result('total_sum')
+                            search_result = show_search_result('total_sum')
                         elif user_action_search == 0:
                             break
+
+                        if search_result:
+                            length = len(search_result)
+                            input(f"\nНайдено: {length} ...")
+
+                            for i in range(length):
+                                current_entry = search_result[i]
+
+                                print(f"{current_entry['id']} | "
+                                      f"{current_entry['date']} | "
+                                      f"{current_entry['operation']} | "
+                                      f"{current_entry['total_sum']} | "
+                                      f"{current_entry['description']}")
+
+                                try:
+                                    search_result[i + 1]
+                                except IndexError:
+                                    input('\nБольше нет...')
+                                else:
+                                    input('...')
+
+                        else:
+                            input('\nНичего не найдено...')
 
             else:
                 input('\nЗаписей нет...')
