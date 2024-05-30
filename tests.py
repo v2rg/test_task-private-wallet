@@ -1,8 +1,6 @@
-import datetime
 import json
 import os
 from unittest import TestCase
-from unittest.mock import patch
 from unittest import mock
 
 from main import PrivateWallet
@@ -51,6 +49,7 @@ class WalletTestCase(TestCase):
 
         self.assertEqual(self.wallet.create_wallet(test_result), True)
         self.assertNotEqual(self.wallet.create_wallet(test_result), None)
+        # print(f'Тест: {self.test_create_wallet_json.__name__}')
 
     def test_read_wallet_json(self):  # проверка содержимого файла 'test_wallet.json'
 
